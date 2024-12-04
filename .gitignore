@@ -1,0 +1,15 @@
+# python things
+__pycache__/
+*.py[cod]
+*$py.class
+
+# jupyter things
+.ipynb_checkpoints
+
+# latex build files 
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
