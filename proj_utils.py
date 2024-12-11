@@ -1,13 +1,10 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import jax
-import jax.numpy as jnp
-import jax.random as jr
-from jaxtyping import Array
+import scipy
 from typing import Callable
-from jax.random import PRNGKey
-from tqdm import tqdm
+
+from vindy.utils import add_lognormal_noise
 
 ### DYNAMICAL SYSTEM MODELS ###
 # Implements a (Lorenz attractor) solver
@@ -36,8 +33,9 @@ def lorenz_scan(t, y, params):
 
   return y_next
 
-def lorenz(t, x, sigma=10, rho=28, beta=8/3):
+def lorenz(t, x, params:tuple[float, float, float]=(10,28,8/3)):
   x1, x2, x3 = x
+  sigma, rho, beta = params
 
   dx1dt = sigma*(x2 - x1)
   dx2dt = x1*(rho - x3) - x2
@@ -47,8 +45,9 @@ def lorenz(t, x, sigma=10, rho=28, beta=8/3):
 
   return y_next
 
-def lkv(t, x, alpha=1.1, beta=0.4, delta=0.1, gamma=0.4):
+def lkv(t, x, params:tuple[float, float, float, float]=(1.1,0.4,0.1,0.4)):
   x1, x2 = x
+  alpha, beta, delta, gamma = params
 
   dx1dt = (alpha - beta*x2)*x1
   dx2dt = (delta*x1 - gamma)*x2
@@ -58,7 +57,7 @@ def lkv(t, x, alpha=1.1, beta=0.4, delta=0.1, gamma=0.4):
   return y_next
 
 ### VARIOUS UTILS ### 
-def generate_directories(model_name, sindy_type, scenario_info, outdir):
+def gen_dirs(model_name, sindy_type, scenario_info, outdir):
   # 
   outdir = os.path.join(outdir, f"{model_name}", f"{sindy_type}")
   figdir = os.path.join(outdir, "figures", f"{scenario_info}")
@@ -71,3 +70,34 @@ def generate_directories(model_name, sindy_type, scenario_info, outdir):
       os.makedirs(dir)
 
   return outdir, figdir, log_dir, weights_dir
+
+def gen_ics(seed, n_train, n_test, ic, mdl_params, mdl_noise):
+  """
+  generates noisy initial conditions and coefficients
+  """
+  np.random.seed(seed)
+
+  x0 = np.concatenate(
+    [np.random.normal(ic_, scale=2, size=(n_train + n_test, 1)) for ic_ in ic],
+    axis = 1)
+  
+  params = []
+  np.random.seed(seed)
+  for i in range(mdl_params):
+    params.append(np.random.normal(mdl_params[i], mdl_params[i]*mdl_noise,
+                                   size=n_train))
+    
+  return x0, np.array(params)
+
+def gen_data(f:Callable, x0, ts, params, n_train):
+  """
+  generates data and adds measurement noise
+  """
+  x = np.array(
+    [
+      scipy.integrate.odeint(lambda x_, t: f(t, x_, params[i]), x0_, ts) 
+      for i, x0_ in enumerate(x0[:n_train])
+    ]
+  )
+
+  x = np.array([add_lognormal_noise(x_, )])
