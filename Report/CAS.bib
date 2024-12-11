@@ -15,6 +15,24 @@
   file = {C:\Users\stian\Zotero\storage\63MVFJ4I\Bakarji et al. - 2022 - Discovering Governing Equations from Partial Measu.pdf}
 }
 
+@article{bruntonDiscoveringGoverningEquations2016,
+  title = {Discovering Governing Equations from Data by Sparse Identification of Nonlinear Dynamical Systems},
+  author = {Brunton, Steven L. and Proctor, Joshua L. and Kutz, J. Nathan},
+  date = {2016-04-12},
+  journaltitle = {Proceedings of the National Academy of Sciences},
+  shortjournal = {Proc. Natl. Acad. Sci. U.S.A.},
+  volume = {113},
+  number = {15},
+  pages = {3932--3937},
+  issn = {0027-8424, 1091-6490},
+  doi = {10.1073/pnas.1517384113},
+  url = {https://pnas.org/doi/full/10.1073/pnas.1517384113},
+  urldate = {2024-12-04},
+  abstract = {Significance             Understanding dynamic constraints and balances in nature has facilitated rapid development of knowledge and enabled technology, including aircraft, combustion engines, satellites, and electrical power. This work develops a novel framework to discover governing equations underlying a dynamical system simply from data measurements, leveraging advances in sparsity techniques and machine learning. The resulting models are parsimonious, balancing model complexity with descriptive ability while avoiding overfitting. There are many critical data-driven problems, such as understanding cognition from neural recordings, inferring climate patterns, determining stability of financial markets, predicting and suppressing the spread of disease, and controlling turbulence for greener transportation and energy. With abundant data and elusive laws, data-driven discovery of dynamics will continue to play an important role in these efforts.           ,              Extracting governing equations from data is a central challenge in many diverse areas of science and engineering. Data are abundant whereas models often remain elusive, as in climate science, neuroscience, ecology, finance, and epidemiology, to name only a few examples. In this work, we combine sparsity-promoting techniques and machine learning with nonlinear dynamical systems to discover governing equations from noisy measurement data. The only assumption about the structure of the model is that there are only a few important terms that govern the dynamics, so that the equations are sparse in the space of possible functions; this assumption holds for many physical systems in an appropriate basis. In particular, we use sparse regression to determine the fewest terms in the dynamic governing equations required to accurately represent the data. This results in parsimonious models that balance accuracy with model complexity to avoid overfitting. We demonstrate the algorithm on a wide range of problems, from simple canonical systems, including linear and nonlinear oscillators and the chaotic Lorenz system, to the fluid vortex shedding behind an obstacle. The fluid example illustrates the ability of this method to discover the underlying dynamics of a system that took experts in the community nearly 30 years to resolve. We also show that this method generalizes to parameterized systems and systems that are time-varying or have external forcing.},
+  langid = {english},
+  file = {C:\Users\stian\Zotero\storage\65C3ACV5\Brunton et al. - 2016 - Discovering governing equations from data by spars.pdf}
+}
+
 @article{championDatadrivenDiscoveryCoordinates2019,
   title = {Data-Driven Discovery of Coordinates and Governing Equations},
   author = {Champion, Kathleen and Lusch, Bethany and Kutz, J. Nathan and Brunton, Steven L.},
@@ -31,4 +49,38 @@
   abstract = {The discovery of governing equations from scientific data has the potential to transform data-rich fields that lack well-characterized quantitative descriptions. Advances in sparse regression are currently enabling the tractable identification of both the structure and parameters of a nonlinear dynamical system from data. The resulting models have the fewest terms necessary to describe the dynamics, balancing model complexity with descriptive ability, and thus promoting interpretability and generalizability. This provides an algorithmic approach to Occam’s razor for model discovery. However, this approach fundamentally relies on an effective coordinate system in which the dynamics have a simple representation. In this work, we design a custom deep autoencoder network to discover a coordinate transformation into a reduced space where the dynamics may be sparsely represented. Thus, we simultaneously learn the governing equations and the associated coordinate system. We demonstrate this approach on several example high-dimensional systems with low-dimensional behavior. The resulting modeling framework combines the strengths of deep neural networks for flexible representation and sparse identification of nonlinear dynamics (SINDy) for parsimonious models. This method places the discovery of coordinates and models on an equal footing.},
   langid = {english},
   file = {C:\Users\stian\Zotero\storage\DPSLM58T\Champion et al. - 2019 - Data-driven discovery of coordinates and governing.pdf}
+}
+
+@article{desilvaPySINDyPythonPackage2020,
+  title = {{{PySINDy}}: {{A Python}} Package for the Sparse Identification of Nonlinear Dynamical Systems from Data},
+  shorttitle = {{{PySINDy}}},
+  author = {De Silva, Brian and Champion, Kathleen and Quade, Markus and Loiseau, Jean-Christophe and Kutz, J. and Brunton, Steven},
+  date = {2020-05-18},
+  journaltitle = {Journal of Open Source Software},
+  shortjournal = {JOSS},
+  volume = {5},
+  number = {49},
+  pages = {2104},
+  issn = {2475-9066},
+  doi = {10.21105/joss.02104},
+  url = {https://joss.theoj.org/papers/10.21105/joss.02104},
+  urldate = {2024-12-11},
+  file = {C:\Users\stian\Zotero\storage\KXR87WYZ\De Silva et al. - 2020 - PySINDy A Python package for the sparse identific.pdf}
+}
+
+@article{kaptanogluPySINDyComprehensivePython2022,
+  title = {{{PySINDy}}: {{A}} Comprehensive {{Python}} Package for Robust Sparse System Identification},
+  shorttitle = {{{PySINDy}}},
+  author = {Kaptanoglu, Alan and De Silva, Brian and Fasel, Urban and Kaheman, Kadierdan and Goldschmidt, Andy and Callaham, Jared and Delahunt, Charles and Nicolaou, Zachary and Champion, Kathleen and Loiseau, Jean-Christophe and Kutz, J. and Brunton, Steven},
+  date = {2022-01-29},
+  journaltitle = {Journal of Open Source Software},
+  shortjournal = {JOSS},
+  volume = {7},
+  number = {69},
+  pages = {3994},
+  issn = {2475-9066},
+  doi = {10.21105/joss.03994},
+  url = {https://joss.theoj.org/papers/10.21105/joss.03994},
+  urldate = {2024-12-11},
+  file = {C:\Users\stian\Zotero\storage\2PBC57FW\Kaptanoglu et al. - 2022 - PySINDy A comprehensive Python package for robust.pdf}
 }
