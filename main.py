@@ -13,7 +13,7 @@ from vindy.callbacks import (
 )
 from vindy.utils import add_lognormal_noise
 
-from proj_utils import lorenz, gen_dirs
+from proj_utils import lorenz, gen_dirs, gen_ics, gen_data, get_time_derivatives, plot_lorenz
 
 # First, let's mostly reproduce a Lorenz attractor under ideal conditions
 # That means, full observability, no noise, large-ish (polynomial library)
@@ -25,13 +25,13 @@ sindy_type = "vindy"
 model_name = "lorenz"
 seed = 37
 
-model_noise_factor = 0
-measurement_noise_factor = 0
+mdl_noise = 0
+measurement_noise = 0
 
 n_train = 30 # n train trajectories
 n_test  = 4  # n test  trajectories
 
-scenario_info = f"{sindy_type}_mdl_noise_{model_noise_factor}_seed_{seed}_noise_{measurement_noise_factor}"
+scenario_info = f"{sindy_type}_mdl_noise_{mdl_noise}_seed_{seed}_noise_{measurement_noise}"
 _, _, _, weights_dir = gen_dirs(model_name, sindy_type, scenario_info, "results")
 
 # initial conditions
@@ -45,5 +45,13 @@ t0, T, dt = 0, 25, 0.01
 ts = np.arange(t0, T, dt)
 nt = ts.shape[0]
 
-params = np.array([10, 28, 8/3])
-y_out = lorenz(0, ic, params)
+mdl_params = np.array([10, 28, 8/3])
+
+x0, params = gen_ics(seed, n_train, n_test, ic, mdl_params, mdl_noise)
+
+x, x_test = gen_data(lorenz, x0, ts, params, n_train, measurement_noise,mdl_params)
+
+dxdt, dxdt_test = get_time_derivatives(x, x_test, dt)
+
+plot_lorenz(x, x_test)
+

@@ -51,6 +51,23 @@
   file = {C:\Users\stian\Zotero\storage\DPSLM58T\Champion et al. - 2019 - Data-driven discovery of coordinates and governing.pdf}
 }
 
+@online{contiVENIVINDyVICI2024,
+  title = {{{VENI}}, {{VINDy}}, {{VICI}}: A Variational Reduced-Order Modeling Framework with Uncertainty Quantification},
+  shorttitle = {{{VENI}}, {{VINDy}}, {{VICI}}},
+  author = {Conti, Paolo and Kneifl, Jonas and Manzoni, Andrea and Frangi, Attilio and Fehr, Jörg and Brunton, Steven L. and Kutz, J. Nathan},
+  date = {2024-05-31},
+  eprint = {2405.20905},
+  eprinttype = {arXiv},
+  eprintclass = {cs},
+  doi = {10.48550/arXiv.2405.20905},
+  url = {http://arxiv.org/abs/2405.20905},
+  urldate = {2024-12-11},
+  abstract = {The simulation of many complex phenomena in engineering and science requires solving expensive, high-dimensional systems of partial differential equations (PDEs). To circumvent this, reduced-order models (ROMs) have been developed to speed up computations. However, when governing equations are unknown or partially known, typically ROMs lack interpretability and reliability of the predicted solutions. In this work we present a data-driven, non-intrusive framework for building ROMs where the latent variables and dynamics are identified in an interpretable manner and uncertainty is quantified. Starting from a limited amount of high-dimensional, noisy data the proposed framework constructs an efficient ROM by leveraging variational autoencoders for dimensionality reduction along with a newly introduced, variational version of sparse identification of nonlinear dynamics (SINDy), which we refer to as Variational Identification of Nonlinear Dynamics (VINDy). In detail, the method consists of Variational Encoding of Noisy Inputs (VENI) to identify the distribution of reduced coordinates. Simultaneously, we learn the distribution of the coefficients of a pre-determined set of candidate functions by VINDy. Once trained offline, the identified model can be queried for new parameter instances and new initial conditions to compute the corresponding full-time solutions. The probabilistic setup enables uncertainty quantification as the online testing consists of Variational Inference naturally providing Certainty Intervals (VICI). In this work we showcase the effectiveness of the newly proposed VINDy method in identifying interpretable and accurate dynamical system for the R\textbackslash "ossler system with different noise intensities and sources. Then the performance of the overall method - named VENI, VINDy, VICI - is tested on PDE benchmarks including structural mechanics and fluid dynamics.},
+  pubstate = {prepublished},
+  keywords = {Computer Science - Computational Engineering Finance and Science,Computer Science - Machine Learning,Mathematics - Dynamical Systems},
+  file = {C:\Users\stian\Zotero\storage\GTZQYIN4\Conti et al. - 2024 - VENI, VINDy, VICI a variational reduced-order mod.pdf}
+}
+
 @article{desilvaPySINDyPythonPackage2020,
   title = {{{PySINDy}}: {{A Python}} Package for the Sparse Identification of Nonlinear Dynamical Systems from Data},
   shorttitle = {{{PySINDy}}},

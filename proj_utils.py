@@ -4,6 +4,7 @@ import numpy as np
 import scipy
 from typing import Callable
 
+import scipy.integrate
 from vindy.utils import add_lognormal_noise
 
 ### DYNAMICAL SYSTEM MODELS ###
@@ -83,13 +84,13 @@ def gen_ics(seed, n_train, n_test, ic, mdl_params, mdl_noise):
   
   params = []
   np.random.seed(seed)
-  for i in range(mdl_params):
+  for i in range(len(mdl_params)):
     params.append(np.random.normal(mdl_params[i], mdl_params[i]*mdl_noise,
                                    size=n_train))
     
-  return x0, np.array(params)
+  return x0, np.array(params).T
 
-def gen_data(f:Callable, x0, ts, params, n_train):
+def gen_data(f:Callable, x0, ts, params, n_train, measurement_noise, mdl_params):
   """
   generates data and adds measurement noise
   """
@@ -99,5 +100,42 @@ def gen_data(f:Callable, x0, ts, params, n_train):
       for i, x0_ in enumerate(x0[:n_train])
     ]
   )
+  x = np.array([add_lognormal_noise(x_, measurement_noise)[0] for x_ in x])
 
-  x = np.array([add_lognormal_noise(x_, )])
+  x_test = np.array(
+    [
+      scipy.integrate.odeint(lambda x_, t: f(t, x_, mdl_params), x0_, ts)
+      for x0_ in x0[n_train:]
+    ]
+  )
+
+  return x, x_test
+
+def get_time_derivatives(x, x_test, dt):
+  dxdt = [np.array(np.gradient(x_, dt, axis=0)) for x_ in x]
+  dxdt_test = [np.array(np.gradient(x_, dt, axis=0)) for x_ in x_test]
+
+  return dxdt, dxdt_test
+
+### PLOTTING UTILS ###
+def plot_lorenz(x, x_test):
+  fig = plt.figure()
+
+  ax = fig.add_subplot(projection = "3d")
+  for i, x_ in enumerate(x):
+    if i == 0:
+      ax.plot(x_[:,0], x_[:, 1], x_[:, 2], c="gray", label = "Training data")
+    else:
+      ax.plot(x_[:,0], x_[:, 1], x_[:, 2], c="gray")
+  for i, x_ in enumerate(x_test):
+    if i == 0:
+      ax.plot(x_[:,0], x_[:, 1], x_[:, 2], c="red", label = "Test data")
+    else:
+      ax.plot(x_[:,0], x_[:, 1], x_[:, 2], c="red")
+
+  plt.xlabel("$x_1$")
+  plt.ylabel("$x_2$")
+  ax.set_zlabel("$x_3$")
+  plt.legend()
+  plt.tight_layout()
+  plt.show()
