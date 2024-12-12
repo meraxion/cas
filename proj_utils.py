@@ -1,11 +1,13 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 import scipy
 from typing import Callable
 
 import scipy.integrate
 from vindy.utils import add_lognormal_noise
+from vindy.layers import VindyLayer
 
 ### DYNAMICAL SYSTEM MODELS ###
 # Implements a (Lorenz attractor) solver
@@ -20,8 +22,7 @@ def get_euler(f:Callable, dt:float):
   return euler_scan_fn
 
 def lorenz_scan(t, y, params):
-  """jax-compatible """
-  
+  """jax-compatible"""
   sigma, rho, beta = params
 
   x1, x2, x3 = y
@@ -56,6 +57,53 @@ def lkv(t, x, params:tuple[float, float, float, float]=(1.1,0.4,0.1,0.4)):
   y_next = dx1dt, dx2dt
 
   return y_next
+
+
+### USE TRAINED MODEL TO PREDICT INTO THE FUTURE ###
+
+def sindy_predict(mdl, sindy_layer:VindyLayer, x_test, ts, dim, var_names, n_traj = 10, i_test = 0):
+  kernel_orig, kernel_scale_orig = sindy_layer.kernel, sindy_layer.kernel_scale
+
+  # integrate basic model
+  t_0 = i_test * int(nt)
+  sol = mdl.integrate(x_test[t_0:t_0+1].squeeze(), ts.squeeze(), mu=None)
+  t_pred = sol.t
+  x_pred = sol.y
+
+  t_preds = []
+  x_preds = []
+
+  nt = ts.shape[0]
+  t_0 = i_test * int(nt)
+
+  print(f"test_trajectory {i_test}")
+  for traj in range(n_traj):
+    print(f"\t sample {traj+1} out of {n_traj}")
+    # sample from the posterior distribution of the coefficients
+    # and remove zeroes and other NAs
+    sampled_coeff, f_, ff_ = sindy_layer._coeffs
+    sampled_coeff = sampled_coeff.numpy()
+    sampled_coeff = sampled_coeff[sampled_coeff != 0]
+
+    # assign the sampled coefficients to the sindy layer
+    sindy_layer.kernel = tf.reshape(sampled_coeff, (-1,1))
+    sol = mdl.integrate(x_test[t_0:t_0+1].squeeze(), ts.squeeze())
+    t_preds.append(sol.t)
+    x_preds.append(sol.y)
+
+  # restore original coefficients
+  sindy_layer.kernel, sindy_layer.kernel_scale = kernel_orig, kernel_scale_orig
+  # calculate mean and variance of the trajectories
+  x_uq = np.array(x_preds)
+  x_uq_mean_sampled = np.mean(x_uq, axis=0)
+  x_uq_std = np.std(x_uq, axis=0)
+
+  plot_vindy_pred(dim, i_test, nt, t_preds, x_uq_mean_sampled, x_uq_std)
+
+
+
+
+  return
 
 ### VARIOUS UTILS ### 
 def gen_dirs(model_name, sindy_type, scenario_info, outdir):
@@ -139,3 +187,64 @@ def plot_lorenz(x, x_test):
   plt.legend()
   plt.tight_layout()
   plt.show()
+
+  return
+
+def plot_train_hist(trainhist, sindy_layer:VindyLayer, var_names):
+
+  plt.figure()
+  plt.title("Loss over epochs")
+  plt.semilogy(trainhist.history["loss"])
+  plt.semilogy(trainhist.history["dz"])
+  plt.semilogy(trainhist.history["kl_sindy"])
+  plt.legend(["total loss", "dz", "kl_sindy"])
+  plt.xlabel("Epochs")
+  plt.ylabel("Loss")
+  plt.show()
+
+  plt.figure()
+  plt.title("VINDy coefficients over epochs")
+  plt.plot(np.array(trainhist.history["coeffs_mean"]).squeeze())
+  plt.legend()
+  plt.xlabel("Epoch")
+  plt.ylabel("Coefficient")
+  plt.show()
+
+  equation = sindy_layer.model_equation_to_str(z=var_names, precision=3)
+  sindy_layer.visualize_coefficients(x_range = [-1.6, 1.6], z=var_names, mu=None)
+  plt.suptitle(equation)
+  plt.tight_layout()
+
+  return
+
+def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_sampled, x_uq_std):
+
+  fig, axs = plt.subplots(dim, 1, figsize=(10,6), sharex=True)
+  fig.suptitle(f"Integrated Test Trajectories")
+
+  t_0 = i_test * int(nt)
+
+  # UQ plot
+  fig, axs = plt.subplots(dim, 1, figsize=(10, 6), sharex=True)
+  fig.suptitle(f"Integrated Test Trajectories")
+  t_0 = i_test * int(nt)
+  axs[0].set_title(f"Test Trajectory {i_test + 1}")
+
+  for i in range(dim):
+      axs[i].fill_between(
+          t_preds[i],
+          x_uq_mean_sampled[i] - 3 * x_uq_std[i],
+          x_uq_mean_sampled[i] + 3 * x_uq_std[i],
+          color="grey",
+          alpha=0.3,
+          label="UQ bounds ($\pm 3$ std)"
+      )
+      axs[i].plot(ts, x_test[t_0: t_0 + nt, i], color="black", label=f"${var_names[i]}$ true")
+      axs[i].plot(t_preds[i], x_uq_mean_sampled[i], color="orange", linestyle="--", label=f"${var_names[i]}$ pred mean")
+      # Adjust the legend to be outside the plot
+      axs[i].legend(loc='upper left', bbox_to_anchor=(1, 1))
+
+  plt.tight_layout(rect=[0, 0, 0.8, 1])  # Adjust the layout to make space for the legends
+  plt.show()
+
+  return
