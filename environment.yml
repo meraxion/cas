@@ -9,7 +9,7 @@ dependencies:
   - brotli=1.0.9=h2bbff1b_8
   - brotli-bin=1.0.9=h2bbff1b_8
   - bzip2=1.0.8=h2bbff1b_6
-  - ca-certificates=2024.9.24=haa95532_0
+  - ca-certificates=2024.11.26=haa95532_0
   - colorama=0.4.6=py312haa95532_0
   - comm=0.2.2=pyhd8ed1ab_0
   - contourpy=1.2.0=py312h59b6b97_0
@@ -40,7 +40,6 @@ dependencies:
   - libbrotlicommon=1.0.9=h2bbff1b_8
   - libbrotlidec=1.0.9=h2bbff1b_8
   - libbrotlienc=1.0.9=h2bbff1b_8
-  - libclang=14.0.6=default_hb5a9fac_1
   - libclang13=14.0.6=default_h8e68704_1
   - libdeflate=1.17=h2bbff1b_1
   - libffi=3.4.4=hd77b12b_1
@@ -57,6 +56,7 @@ dependencies:
   - mkl-service=2.4.0=py312h2bbff1b_1
   - mkl_fft=1.3.10=py312h827c3e9_0
   - mkl_random=1.2.7=py312h0158946_0
+  - mpmath=1.3.0=py312haa95532_0
   - nest-asyncio=1.6.0=pyhd8ed1ab_0
   - numexpr=2.8.7=py312h96b7d27_0
   - numpy=1.26.4=py312hfd52020_0
@@ -95,6 +95,7 @@ dependencies:
   - six=1.16.0=pyhd3eb1b0_1
   - sqlite=3.45.3=h2bbff1b_0
   - stack_data=0.6.2=pyhd8ed1ab_0
+  - sympy=1.13.2=py312haa95532_0
   - tbb=2021.8.0=h59b6b97_0
   - tk=8.6.14=h0416ee5_0
   - tornado=6.4.1=py312h827c3e9_0
@@ -114,35 +115,71 @@ dependencies:
   - zlib=1.2.13=h8cc25b3_1
   - zstd=1.5.5=hd43e919_2
   - pip:
-      - absl-py==2.1.0
+      - absl-py==1.4.0
+      - astunparse==1.6.3
+      - certifi==2024.8.30
+      - charset-normalizer==3.4.0
       - chex==0.1.87
       - cloudpickle==3.1.0
+      - cmake==3.31.1
+      - derivative==0.6.3
+      - dm-tree==0.1.8
       - etils==1.10.0
       - farama-notifications==0.0.4
+      - flatbuffers==24.3.25
       - flax==0.10.2
       - fsspec==2024.10.0
+      - gast==0.6.0
+      - google-pasta==0.2.0
+      - grpcio==1.68.1
       - gym==0.26.2
       - gym-notices==0.0.8
       - gymnasium==1.0.0
       - gymnax==0.0.8
+      - h5py==3.12.1
       - humanize==4.11.0
+      - idna==3.10
       - importlib-resources==6.4.5
       - jax==0.4.35
       - jaxlib==0.4.35
       - jaxtyping==0.2.34
+      - joblib==1.4.2
+      - keras==3.7.0
+      - libclang==18.1.1
+      - markdown==3.7
       - markdown-it-py==3.0.0
+      - markupsafe==3.0.2
       - mdurl==0.1.2
-      - ml-dtypes==0.5.0
+      - ml-dtypes==0.4.1
       - msgpack==1.1.0
+      - namex==0.0.8
       - opt-einsum==3.4.0
       - optax==0.2.4
+      - optree==0.13.1
       - orbax-checkpoint==0.10.1
       - protobuf==5.28.3
+      - pysindy==1.7.5
       - pyyaml==6.0.2
+      - requests==2.32.3
       - rich==13.9.4
+      - scikit-learn==1.5.2
+      - scs==3.2.7
       - simplejson==3.19.3
+      - tensorboard==2.18.0
+      - tensorboard-data-server==0.7.2
+      - tensorflow==2.18.0
+      - tensorflow-intel==2.18.0
+      - tensorflow-model-optimization==0.8.0
+      - tensorflow-probability==0.25.0
       - tensorstore==0.1.68
+      - termcolor==2.5.0
+      - tf-keras==2.18.0
+      - threadpoolctl==3.5.0
       - toolz==1.0.0
       - tqdm==4.67.0
       - typeguard==2.13.3
+      - urllib3==2.2.3
+      - vindy==0.1.7
+      - werkzeug==3.1.3
+      - wrapt==1.17.0
 prefix: C:\Users\stian\miniconda3\envs\cas
