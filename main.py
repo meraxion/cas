@@ -15,7 +15,7 @@ from vindy.callbacks import (
   SaveCoefficientsCallback,
 )
 # local utils import
-from proj_utils import lorenz, gen_dirs, gen_ics, gen_data, get_time_derivatives, plot_lorenz
+from proj_utils import lorenz, plot_lorenz, gen_dirs, gen_ics, gen_data, get_time_derivatives, save_train_plots
 
 # This first section mostly follows the example provided in
 # https://colab.research.google.com/drive/1Tvk93iU5kh7i7ffkOwfMUPwxT1rhhoW0
@@ -26,6 +26,7 @@ def train_vindy_model(
     model_name:str="lorenz",
     dynamics:Callable=lorenz,
     dynamics_params:np.ndarray=np.array([10, 28, 8/3]),
+    dynamics_plot:Callable=plot_lorenz,
     seed:int=37,
     mdl_noise:float=0,
     measurement_noise:float=0,
@@ -38,7 +39,8 @@ def train_vindy_model(
     epochs:int=500,
     batch_size:int=256,
     pdf_threshold:float=0.5,
-    prior_distribution=Laplace(0.0, 1.0)):
+    prior_distribution=Laplace(0.0, 1.0)
+    ) -> dict:
     """
     train a VINDy model with given hyperparameters.
     
@@ -146,6 +148,7 @@ def train_vindy_model(
     # Calculate test loss
     test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0)
     
+    save_train_plots()
     return {
         'history': trainhist.history,
         'test_loss': test_loss,
@@ -216,9 +219,24 @@ def test():
   # First, let's mostly reproduce a Lorenz attractor under ideal conditions
   # That means, full observability, no noise, large-ish (polynomial library)
 
+  # by construction, that should be the default function call to the model
+  result = train_vindy_model()
 
-  # run test
+  
 
+
+  return
+
+def load_and_plot_mdl(weights_path):
+
+  # Load best weights and apply threshold
+  mdl.load_weights(weights_path)
+  sindy_layer.pdf_thresholding(threshold=pdf_threshold)
+  
+  # Calculate test loss
+  test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0)
+    
+    
   return
 
 if __name__ == "__main__":

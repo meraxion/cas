@@ -166,7 +166,7 @@ def get_time_derivatives(x, x_test, dt):
   return dxdt, dxdt_test
 
 ### PLOTTING UTILS ###
-def plot_lorenz(x, x_test):
+def plot_lorenz(x, x_test, plots_dir, scenario_info):
   fig = plt.figure()
 
   ax = fig.add_subplot(projection = "3d")
@@ -188,32 +188,44 @@ def plot_lorenz(x, x_test):
   plt.tight_layout()
   plt.show()
 
-  return
+  plt.savefig(os.path.join(plots_dir, f'{scenario_info}_dynamics.png'))
+  plt.close()
 
-def plot_train_hist(trainhist, sindy_layer:VindyLayer, var_names):
+  return 
 
+def plot_train_hist(history,
+                    sindy_layer:VindyLayer,
+                    var_names,
+                    plots_dir,
+                    scenario_info):
+  
   plt.figure()
   plt.title("Loss over epochs")
-  plt.semilogy(trainhist.history["loss"])
-  plt.semilogy(trainhist.history["dz"])
-  plt.semilogy(trainhist.history["kl_sindy"])
+  plt.semilogy(history["loss"])
+  plt.semilogy(history["dz"])
+  plt.semilogy(history["kl_sindy"])
   plt.legend(["total loss", "dz", "kl_sindy"])
   plt.xlabel("Epochs")
   plt.ylabel("Loss")
   plt.show()
 
+  plt.savefig(os.path.join(plots_dir, f'{scenario_info}_train_loss.png'))
+  plt.close()
+
   plt.figure()
   plt.title("VINDy coefficients over epochs")
-  plt.plot(np.array(trainhist.history["coeffs_mean"]).squeeze())
+  plt.plot(np.array(history["coeffs_mean"]).squeeze())
   plt.legend()
   plt.xlabel("Epoch")
   plt.ylabel("Coefficient")
-  plt.show()
-
+  
   equation = sindy_layer.model_equation_to_str(z=var_names, precision=3)
   sindy_layer.visualize_coefficients(x_range = [-1.6, 1.6], z=var_names, mu=None)
   plt.suptitle(equation)
   plt.tight_layout()
+  plt.savefig(os.path.join(plots_dir, f'{scenario_info}_coefficients.png'))
+  plt.show()
+  plt.close()
 
   return
 
@@ -248,3 +260,30 @@ def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_s
   plt.show()
 
   return
+
+def save_train_plots(
+    x:list,
+    x_test:list,
+    history:dict,
+    sindy_layer: VindyLayer,
+    var_names:list,
+    model_dir:str,
+    scenario_info:str,
+    dynamics_plot:Callable=plot_lorenz
+):
+  plots_dir = os.path.join(model_dir, "figures")
+  os.makedirs(plots_dir, exist_ok=True)
+
+  dynamics_plot(x, x_test, plots_dir, scenario_info)
+
+  plot_train_hist(history,
+                  sindy_layer,
+                  var_names,
+                  plots_dir,
+                  scenario_info)
+  
+  return
+
+
+
+
