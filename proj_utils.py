@@ -70,8 +70,7 @@ def sindy_predict(mdl,
   kernel_orig, kernel_scale_orig = sindy_layer.kernel, sindy_layer.kernel_scale
 
   # integrate basic model
-  t_0 = i_test * int(nt)
-  sol = mdl.integrate(x_test[t_0:t_0+1].squeeze(), ts.squeeze(), mu=None)
+  t_0 = i_test * int(ts.shape[0])
 
   t_preds = []
   x_preds = []
@@ -101,9 +100,8 @@ def sindy_predict(mdl,
   x_uq_mean_sampled = np.mean(x_uq, axis=0)
   x_uq_std = np.std(x_uq, axis=0)
 
-  plot_vindy_pred(dim, i_test, nt, t_preds,
-                  x_uq_mean_sampled, x_uq_std, 
-                  fig_dir, scenario_info)
+  plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test,
+                  x_uq_mean_sampled, x_uq_std, fig_dir)
   return
 
 ### VARIOUS UTILS ### 
@@ -167,7 +165,7 @@ def get_time_derivatives(x, x_test, dt):
   return dxdt, dxdt_test
 
 ### PLOTTING UTILS ###
-def plot_lorenz(x, x_test, plots_dir, scenario_info):
+def plot_lorenz(x, x_test, plots_dir):
   fig = plt.figure()
 
   ax = fig.add_subplot(projection = "3d")
@@ -189,7 +187,7 @@ def plot_lorenz(x, x_test, plots_dir, scenario_info):
   plt.tight_layout()
   plt.show()
 
-  plt.savefig(os.path.join(plots_dir, f'{scenario_info}_dynamics.png'))
+  plt.savefig(os.path.join(plots_dir, "_dynamics.png"))
   plt.close()
 
   return 
@@ -197,8 +195,7 @@ def plot_lorenz(x, x_test, plots_dir, scenario_info):
 def plot_train_hist(history,
                     sindy_layer:VindyLayer,
                     var_names,
-                    plots_dir,
-                    scenario_info):
+                    plots_dir):
   
   plt.figure()
   plt.title("Loss over epochs")
@@ -210,7 +207,7 @@ def plot_train_hist(history,
   plt.ylabel("Loss")
   plt.show()
 
-  plt.savefig(os.path.join(plots_dir, f'{scenario_info}_train_loss.png'))
+  plt.savefig(os.path.join(plots_dir, "_train_loss.png"))
   plt.close()
 
   plt.figure()
@@ -224,13 +221,13 @@ def plot_train_hist(history,
   sindy_layer.visualize_coefficients(x_range = [-1.6, 1.6], z=var_names, mu=None)
   plt.suptitle(equation)
   plt.tight_layout()
-  plt.savefig(os.path.join(plots_dir, f'{scenario_info}_coefficients.png'))
+  plt.savefig(os.path.join(plots_dir, "_coefficients.png"))
   plt.show()
   plt.close()
 
   return
 
-def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_sampled, x_uq_std, fig_dir, scenario_info):
+def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_sampled, x_uq_std, fig_dir):
 
   fig, axs = plt.subplots(dim, 1, figsize=(10,6), sharex=True)
   fig.suptitle(f"Integrated Test Trajectories")
@@ -258,7 +255,7 @@ def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_s
       axs[i].legend(loc='upper left', bbox_to_anchor=(1, 1))
 
   plt.tight_layout(rect=[0, 0, 0.8, 1])  # Adjust the layout to make space for the legends
-  plt.savefig(os.path.join(fig_dir, f'{scenario_info}_predictions.png'))
+  plt.savefig(os.path.join(fig_dir, "_predictions.png"))
 
   plt.show()
 
@@ -271,16 +268,14 @@ def save_train_plots(
     sindy_layer: VindyLayer,
     var_names:list,
     fig_dir:str,
-    scenario_info:str,
     dynamics_plot:Callable=plot_lorenz
 ):
-  dynamics_plot(x, x_test, fig_dir, scenario_info)
+  dynamics_plot(x, x_test, fig_dir)
 
   plot_train_hist(history,
                   sindy_layer,
                   var_names,
-                  fig_dir,
-                  scenario_info)  
+                  fig_dir)  
   return
 
 

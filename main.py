@@ -25,6 +25,7 @@ def train_vindy_model(
     model_name:str="lorenz",
     dynamics:Callable=lorenz,
     dynamics_params:np.ndarray=np.array([10, 28, 8/3]),
+    dynamics_ic:list[float]=[0,0,25],
     dynamics_plot:Callable=plot_lorenz,
     var_names:list[str]=["x_1", "x_2", "x_3"],
     seed:int=37,
@@ -65,17 +66,13 @@ def train_vindy_model(
     """
     scenario_info = f"{sindy_type}_mdl_noise_{mdl_noise}_seed_{seed}_noise_{measurement_noise}"
     _, fig_dir, _, weights_dir = gen_dirs(model_name, sindy_type, scenario_info, "results")
-    
-    # Initial conditions
-    ic = [0, 0, 25]  # [x1_0, x2_0, x3_0]
-    
+
     # Time vector
     t0, T, dt = 0, 25, 0.01
     ts = np.arange(t0, T, dt)
-    nt = ts.shape[0]
     
     # Generate data
-    x0, params = gen_ics(seed, n_train, n_test, ic, dynamics_params, mdl_noise)
+    x0, params = gen_ics(seed, n_train, n_test, dynamics_ic, dynamics_params, mdl_noise)
     x, x_test_ = gen_data(dynamics, x0, ts, params, n_train, measurement_noise, dynamics_params)
     dxdt, dxdt_test = get_time_derivatives(x, x_test_, dt)
     
@@ -153,8 +150,7 @@ def train_vindy_model(
                      trainhist.history,
                      sindy_layer, 
                      var_names,
-                     fig_dir,
-                     scenario_info, 
+                     fig_dir, 
                      dynamics_plot)
     return {
         "history": trainhist.history,
@@ -163,7 +159,7 @@ def train_vindy_model(
         "sindy_layer": sindy_layer,
         "scenario_info": scenario_info,
     }, {
-        "x_test": x_test_,
+        "x_test": x_test,
         "ts":ts,
         "dim":dim,
         "fig_dir": fig_dir,
@@ -231,14 +227,14 @@ def test():
   tf.random.set_seed(37)
 
   # First, let's mostly reproduce a Lorenz attractor under ideal conditions
-  # That means, full observability, no noise, large-ish (polynomial library)
+  # That means, full observability, no noise, large-ish polynomial-only library
 
   # by construction, that should be the default function call to the model
   result, scenario = train_vindy_model(epochs=50)
  
   sindy_predict(result["model"], result["sindy_layer"], scenario["x_test"],
                 scenario["ts"], scenario["dim"], scenario["var_names"],
-                scenario["fig_dir"], result["scenario_info"])
+                scenario["fig_dir"])
 
   return result
 
