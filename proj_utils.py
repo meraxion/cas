@@ -64,7 +64,7 @@ def sindy_predict(mdl,
                   sindy_layer:VindyLayer, 
                   x_test, 
                   ts, dim, var_names, 
-                  fig_dir, scenario_info,
+                  fig_dir,
                   n_traj = 10, i_test = 0):
   
   kernel_orig, kernel_scale_orig = sindy_layer.kernel, sindy_layer.kernel_scale
@@ -228,9 +228,9 @@ def plot_train_hist(history,
   return
 
 def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_sampled, x_uq_std, fig_dir):
-
-  fig, axs = plt.subplots(dim, 1, figsize=(10,6), sharex=True)
-  fig.suptitle(f"Integrated Test Trajectories")
+  """
+  predicts the lorenz attractor forward in time, sampling trajectories from the model parameters to include some uncertainty-quantification in the prediction
+  """
 
   t_0 = i_test * int(nt)
 
