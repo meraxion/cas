@@ -15,11 +15,10 @@ from vindy.callbacks import (
   SaveCoefficientsCallback,
 )
 # local utils import
-from proj_utils import lorenz, plot_lorenz, gen_dirs, gen_ics, gen_data, get_time_derivatives, save_train_plots
+from proj_utils import lorenz, plot_lorenz, sindy_predict, gen_dirs, gen_ics, gen_data, get_time_derivatives, save_train_plots
 
 # This first section mostly follows the example provided in
 # https://colab.research.google.com/drive/1Tvk93iU5kh7i7ffkOwfMUPwxT1rhhoW0
-
 
 def train_vindy_model(
     sindy_type:str="vindy",
@@ -27,10 +26,11 @@ def train_vindy_model(
     dynamics:Callable=lorenz,
     dynamics_params:np.ndarray=np.array([10, 28, 8/3]),
     dynamics_plot:Callable=plot_lorenz,
+    var_names:list[str]=["x_1", "x_2", "x_3"],
     seed:int=37,
     mdl_noise:float=0,
     measurement_noise:float=0,
-    mdl_library:list[BaseLibrary]=[PolynomialLibrary(3, 3)],
+    mdl_library:list[BaseLibrary]=[PolynomialLibrary(2, 3)],
     n_train:int=30,
     n_test:int=4,
     learning_rate:float=0.001,
@@ -64,7 +64,7 @@ def train_vindy_model(
         dict: Training history and model metrics
     """
     scenario_info = f"{sindy_type}_mdl_noise_{mdl_noise}_seed_{seed}_noise_{measurement_noise}"
-    _, _, _, weights_dir = gen_dirs(model_name, sindy_type, scenario_info, "results")
+    _, fig_dir, _, weights_dir = gen_dirs(model_name, sindy_type, scenario_info, "results")
     
     # Initial conditions
     ic = [0, 0, 25]  # [x1_0, x2_0, x3_0]
@@ -76,20 +76,21 @@ def train_vindy_model(
     
     # Generate data
     x0, params = gen_ics(seed, n_train, n_test, ic, dynamics_params, mdl_noise)
-    x, x_test = gen_data(dynamics, x0, ts, params, n_train, measurement_noise, dynamics_params)
-    dxdt, dxdt_test = get_time_derivatives(x, x_test, dt)
+    x, x_test_ = gen_data(dynamics, x0, ts, params, n_train, measurement_noise, dynamics_params)
+    dxdt, dxdt_test = get_time_derivatives(x, x_test_, dt)
     
     ### Make VINDy model ###
     # reshape data to fit model
     x_train = np.concatenate(x, axis=0)
     dxdt_train = np.concatenate(dxdt, axis=0)
-    x_test = np.concatenate(x_test, axis=0)
+    x_test = np.concatenate(x_test_, axis=0)
     dxdt_test = np.concatenate(dxdt_test, axis=0)
+    dim = x_train.shape[1]
     
     # create model
     # model param library
     layer_params = dict(
-        state_dim=x_train.shape[1],
+        state_dim=dim,
         param_dim=0,
         feature_libraries=mdl_library,
         second_order=False,
@@ -115,10 +116,10 @@ def train_vindy_model(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss="huber")
     
-    input_shapes = [(x_train.shape[1],), (dxdt_train.shape[1],)]
+    input_shapes = [(dim,), (dxdt_train.shape[1],)]
     mdl.build(input_shapes)
     
-    weights_path = os.path.join(weights_dir, f"weights_{scenario_info}.h5")
+    weights_path = os.path.join(weights_dir, f".weights.h5")
 
     callbacks = [
         tf.keras.callbacks.ModelCheckpoint(
@@ -148,13 +149,27 @@ def train_vindy_model(
     # Calculate test loss
     test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0)
     
-    save_train_plots()
+    save_train_plots(x, x_test_,
+                     trainhist.history,
+                     sindy_layer, 
+                     var_names,
+                     fig_dir,
+                     scenario_info, 
+                     dynamics_plot)
     return {
-        'history': trainhist.history,
-        'test_loss': test_loss,
-        'model': mdl,
-        'scenario_info': scenario_info
+        "history": trainhist.history,
+        "test_loss": test_loss,
+        "model": mdl,
+        "sindy_layer": sindy_layer,
+        "scenario_info": scenario_info,
+    }, {
+        "x_test": x_test_,
+        "ts":ts,
+        "dim":dim,
+        "fig_dir": fig_dir,
+        "var_names": var_names
     }
+
 
 def run_hyperparameter_sweep():
     """
@@ -162,12 +177,11 @@ def run_hyperparameter_sweep():
     """
     # Define parameter grid
     param_grid = {
-        'measurement_noise': [0, 0.1, 0.2],
-        'mdl_noise': [0, 0.05, 0.1],
-        'beta': [1e-4, 1e-3, 1e-2],
-        'l_dz': [1e-1, 1e0, 1e1],
-        'learning_rate': [1e-4, 1e-3],
-        'pdf_threshold': [0.3, 0.5, 0.7]
+        "measurement_noise": [0, 0.1, 0.2],
+        "mdl_noise": [0, 0.05, 0.1],
+        "beta": [1e-4, 1e-3, 1e-2],
+        "l_dz": [1e-1, 1e0, 1e1],
+        "pdf_threshold": [0.3, 0.5, 0.7]
     }
     
     results = []
@@ -220,14 +234,15 @@ def test():
   # That means, full observability, no noise, large-ish (polynomial library)
 
   # by construction, that should be the default function call to the model
-  result = train_vindy_model()
+  result, scenario = train_vindy_model(epochs=50)
+ 
+  sindy_predict(result["model"], result["sindy_layer"], scenario["x_test"],
+                scenario["ts"], scenario["dim"], scenario["var_names"],
+                scenario["fig_dir"], result["scenario_info"])
 
-  
+  return result
 
-
-  return
-
-def load_and_plot_mdl(weights_path):
+"""def load_and_plot_mdl(weights_path):
 
   # Load best weights and apply threshold
   mdl.load_weights(weights_path)
@@ -235,10 +250,9 @@ def load_and_plot_mdl(weights_path):
   
   # Calculate test loss
   test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0)
-    
-    
-  return
+
+  return"""
 
 if __name__ == "__main__":
   # main()
-  test()
+  result = test()

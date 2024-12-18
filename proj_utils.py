@@ -60,15 +60,18 @@ def lkv(t, x, params:tuple[float, float, float, float]=(1.1,0.4,0.1,0.4)):
 
 
 ### USE TRAINED MODEL TO PREDICT INTO THE FUTURE ###
-
-def sindy_predict(mdl, sindy_layer:VindyLayer, x_test, ts, dim, var_names, n_traj = 10, i_test = 0):
+def sindy_predict(mdl, 
+                  sindy_layer:VindyLayer, 
+                  x_test, 
+                  ts, dim, var_names, 
+                  fig_dir, scenario_info,
+                  n_traj = 10, i_test = 0):
+  
   kernel_orig, kernel_scale_orig = sindy_layer.kernel, sindy_layer.kernel_scale
 
   # integrate basic model
   t_0 = i_test * int(nt)
   sol = mdl.integrate(x_test[t_0:t_0+1].squeeze(), ts.squeeze(), mu=None)
-  t_pred = sol.t
-  x_pred = sol.y
 
   t_preds = []
   x_preds = []
@@ -98,11 +101,9 @@ def sindy_predict(mdl, sindy_layer:VindyLayer, x_test, ts, dim, var_names, n_tra
   x_uq_mean_sampled = np.mean(x_uq, axis=0)
   x_uq_std = np.std(x_uq, axis=0)
 
-  plot_vindy_pred(dim, i_test, nt, t_preds, x_uq_mean_sampled, x_uq_std)
-
-
-
-
+  plot_vindy_pred(dim, i_test, nt, t_preds,
+                  x_uq_mean_sampled, x_uq_std, 
+                  fig_dir, scenario_info)
   return
 
 ### VARIOUS UTILS ### 
@@ -229,7 +230,7 @@ def plot_train_hist(history,
 
   return
 
-def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_sampled, x_uq_std):
+def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_sampled, x_uq_std, fig_dir, scenario_info):
 
   fig, axs = plt.subplots(dim, 1, figsize=(10,6), sharex=True)
   fig.suptitle(f"Integrated Test Trajectories")
@@ -257,6 +258,8 @@ def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_s
       axs[i].legend(loc='upper left', bbox_to_anchor=(1, 1))
 
   plt.tight_layout(rect=[0, 0, 0.8, 1])  # Adjust the layout to make space for the legends
+  plt.savefig(os.path.join(fig_dir, f'{scenario_info}_predictions.png'))
+
   plt.show()
 
   return
@@ -267,21 +270,17 @@ def save_train_plots(
     history:dict,
     sindy_layer: VindyLayer,
     var_names:list,
-    model_dir:str,
+    fig_dir:str,
     scenario_info:str,
     dynamics_plot:Callable=plot_lorenz
 ):
-  plots_dir = os.path.join(model_dir, "figures")
-  os.makedirs(plots_dir, exist_ok=True)
-
-  dynamics_plot(x, x_test, plots_dir, scenario_info)
+  dynamics_plot(x, x_test, fig_dir, scenario_info)
 
   plot_train_hist(history,
                   sindy_layer,
                   var_names,
-                  plots_dir,
-                  scenario_info)
-  
+                  fig_dir,
+                  scenario_info)  
   return
 
 
