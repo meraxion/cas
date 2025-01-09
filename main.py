@@ -15,7 +15,7 @@ from vindy.callbacks import (
   SaveCoefficientsCallback,
 )
 # local utils import
-from proj_utils import lorenz, plot_lorenz, sindy_predict, gen_dirs, gen_ics, gen_data, get_time_derivatives, save_train_plots
+from proj_utils import lorenz, plot_lorenz, sindy_predict, plot_loss_over_noise, gen_dirs, gen_ics, gen_data, get_time_derivatives, save_train_plots
 
 # This first section mostly follows the example provided in
 # https://colab.research.google.com/drive/1Tvk93iU5kh7i7ffkOwfMUPwxT1rhhoW0
@@ -144,7 +144,7 @@ def train_vindy_model(
     sindy_layer.pdf_thresholding(threshold=pdf_threshold)
     
     # Calculate test loss
-    test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0)
+    test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0, return_dict=True)
     
     save_train_plots(x, x_test_,
                      trainhist.history,
@@ -173,19 +173,9 @@ def run_hyperparameter_sweep():
     """
     # Define parameter grid
     param_grid = {
-        "epochs" : [1000, 10000],
-        "measurement_noise": [0, 0.1, 0.2],
-        "mdl_noise": [0, 0.05, 0.1],
-        "beta": [1e-4, 1e-3, 1e-2],
-        "l_dz": [1e-1, 1e0, 1e1],
-        "pdf_threshold": [0.3, 0.5, 0.7]
-    }
-    param_grid = {
-        "epochs" : [100],
-        "measurement_noise": [0.1,],
+        "epochs" : [250],
+        "measurement_noise": [0, 0.1],
         "mdl_noise": [0],
-        "beta": [1e-4],
-        "l_dz": [1e-1],
         "pdf_threshold": [0.5]
     }
     
@@ -202,13 +192,13 @@ def run_hyperparameter_sweep():
             results.append({
                 'params': params,
                 'final_loss': result['history']['loss'][-1],
-                'test_loss': result['test_loss'],
+                'test_loss': result['test_loss']['loss'],
                 'scenario_info': result['scenario_info']
             })
         except Exception as e:
             print(f"Error with parameters {params}: {str(e)}")
     
-    return results
+    return results, param_grid
 
 def main():
     # set random seeds for reproducibility
@@ -216,12 +206,14 @@ def main():
     tf.random.set_seed(37)
     
     # run hyperparameter sweep
-    results = run_hyperparameter_sweep()
+    results, param_grid = run_hyperparameter_sweep()
     
     # save results
-    results_dir = "hyperparameter_sweep_results"
+    results_dir = os.path.join("results", "hyperparameter_sweep_results")
     os.makedirs(results_dir, exist_ok=True)
     np.save(os.path.join(results_dir, "sweep_results.npy"), results)
+
+    plot_loss_over_noise(results, param_grid)
     
     # print best results
     sorted_results = sorted(results, key=lambda x: x['test_loss'])
@@ -247,5 +239,5 @@ def test():
   return result
 
 if __name__ == "__main__":
-  # main()
-  result = test()
+  main()
+  # result = test()

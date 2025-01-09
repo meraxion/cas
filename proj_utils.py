@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import scipy
 from typing import Callable
@@ -278,6 +279,23 @@ def save_train_plots(
                   fig_dir)  
   return
 
+def plot_loss_over_noise(results, param_grid, plots_dir="figures"):
 
+  noises = param_grid["measurement_noise"]
+  df = pd.DataFrame.from_dict(results)
+  df = df[["final_loss", "test_loss"]]
 
+  plt.figure()
+  plt.title("Loss at different levels of measurement noise")
+  plt.xlabel("Measurement Noise")
+  plt.ylabel("Loss")
 
+  plt.plot(noises, df["final_loss"], label="Final Training Loss")
+  plt.plot(noises, df["test_loss"], label="Test Loss")
+  plt.legend()
+  plt.show()
+  save_dir = os.path.join("results", plots_dir)
+  plt.savefig(os.path.join(save_dir, "loss_by_noise.png"))
+  plt.close()
+
+  return

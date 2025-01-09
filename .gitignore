@@ -16,3 +16,6 @@ __pycache__/
 
 # bib
 literature/
+
+# temp
+results/
