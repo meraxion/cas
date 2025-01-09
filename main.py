@@ -173,11 +173,20 @@ def run_hyperparameter_sweep():
     """
     # Define parameter grid
     param_grid = {
+        "epochs" : [1000, 10000],
         "measurement_noise": [0, 0.1, 0.2],
         "mdl_noise": [0, 0.05, 0.1],
         "beta": [1e-4, 1e-3, 1e-2],
         "l_dz": [1e-1, 1e0, 1e1],
         "pdf_threshold": [0.3, 0.5, 0.7]
+    }
+    param_grid = {
+        "epochs" : [100],
+        "measurement_noise": [0.1,],
+        "mdl_noise": [0],
+        "beta": [1e-4],
+        "l_dz": [1e-1],
+        "pdf_threshold": [0.5]
     }
     
     results = []
@@ -189,7 +198,7 @@ def run_hyperparameter_sweep():
     for params in param_combinations:
         print(f"\nTraining with parameters: {params}")
         try:
-            result = train_vindy_model(**params)
+            result, scenario = train_vindy_model(**params)
             results.append({
                 'params': params,
                 'final_loss': result['history']['loss'][-1],
@@ -228,26 +237,14 @@ def test():
 
   # First, let's mostly reproduce a Lorenz attractor under ideal conditions
   # That means, full observability, no noise, large-ish polynomial-only library
-
   # by construction, that should be the default function call to the model
-  result, scenario = train_vindy_model(epochs=50)
+  result, scenario = train_vindy_model(epochs=1000)
  
   sindy_predict(result["model"], result["sindy_layer"], scenario["x_test"],
                 scenario["ts"], scenario["dim"], scenario["var_names"],
                 scenario["fig_dir"])
 
   return result
-
-"""def load_and_plot_mdl(weights_path):
-
-  # Load best weights and apply threshold
-  mdl.load_weights(weights_path)
-  sindy_layer.pdf_thresholding(threshold=pdf_threshold)
-  
-  # Calculate test loss
-  test_loss = mdl.evaluate([x_test, dxdt_test], verbose=0)
-
-  return"""
 
 if __name__ == "__main__":
   # main()
