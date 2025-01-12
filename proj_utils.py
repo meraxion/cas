@@ -186,7 +186,7 @@ def plot_lorenz(x, x_test, plots_dir):
   ax.set_zlabel("$x_3$")
   plt.legend()
   plt.tight_layout()
-  plt.show()
+  # plt.show()
 
   plt.savefig(os.path.join(plots_dir, "_dynamics.png"))
   plt.close()
@@ -206,7 +206,7 @@ def plot_train_hist(history,
   plt.legend(["total loss", "dz", "kl_sindy"])
   plt.xlabel("Epochs")
   plt.ylabel("Loss")
-  plt.show()
+  # plt.show()
 
   plt.savefig(os.path.join(plots_dir, "_train_loss.png"))
   plt.close()
@@ -223,7 +223,7 @@ def plot_train_hist(history,
   plt.suptitle(equation)
   plt.tight_layout()
   plt.savefig(os.path.join(plots_dir, "_coefficients.png"))
-  plt.show()
+  # plt.show()
   plt.close()
 
   return
@@ -258,7 +258,7 @@ def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_s
   plt.tight_layout(rect=[0, 0, 0.8, 1])  # Adjust the layout to make space for the legends
   plt.savefig(os.path.join(fig_dir, "_predictions.png"))
 
-  plt.show()
+  # plt.show()
 
   return
 
@@ -281,21 +281,25 @@ def save_train_plots(
 
 def plot_loss_over_noise(results, param_grid, plots_dir="figures"):
 
-  noises = param_grid["measurement_noise"]
+  noises = param_grid["mdl_noise"]
   df = pd.DataFrame.from_dict(results)
   df = df[["final_loss", "test_loss"]]
 
   plt.figure()
   plt.title("Loss at different levels of measurement noise")
-  plt.xlabel("Measurement Noise")
+  plt.xlabel("Model Noise")
   plt.ylabel("Loss")
 
   plt.plot(noises, df["final_loss"], label="Final Training Loss")
   plt.plot(noises, df["test_loss"], label="Test Loss")
-  plt.legend()
-  plt.show()
   save_dir = os.path.join("results", plots_dir)
   plt.savefig(os.path.join(save_dir, "loss_by_noise.png"))
+  plt.legend()
+  plt.show()
   plt.close()
+
+  return
+
+def plot_loss_over_mdl_noise():
 
   return

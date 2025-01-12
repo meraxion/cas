@@ -173,8 +173,8 @@ def run_hyperparameter_sweep():
     """
     # Define parameter grid
     param_grid = {
-        "epochs" : [250],
-        "measurement_noise": [0, 0.1],
+        "epochs" : [2500],
+        "measurement_noise": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
         "mdl_noise": [0],
         "pdf_threshold": [0.5]
     }
@@ -222,6 +222,8 @@ def main():
         print(f"\n{i+1}. Test Loss: {result['test_loss']:.6f}")
         print("Parameters:", result['params'])
 
+    return results
+
 def test():
   # Set random seeds for reproducibility
   np.random.seed(37)
@@ -239,5 +241,5 @@ def test():
   return result
 
 if __name__ == "__main__":
-  main()
+  result = main()
   # result = test()
