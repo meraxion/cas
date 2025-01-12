@@ -173,8 +173,8 @@ def run_hyperparameter_sweep():
     """
     # Define parameter grid
     param_grid = {
-        "epochs" : [2500],
-        "measurement_noise": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
+        "epochs" : [1000],
+        "measurement_noise": [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 5],
         "mdl_noise": [0],
         "pdf_threshold": [0.5]
     }
