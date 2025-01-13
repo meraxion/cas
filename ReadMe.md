@@ -14,7 +14,4 @@ Project for the course Complex Adaptive Systems, Radboud University Nijmegen.
 - [Eigensteve, Youtube Channel](https://www.youtube.com/@Eigensteve/videos)
 
 ## Status
-Initial
-
-## Dependencies
-- TBD
+Finished
