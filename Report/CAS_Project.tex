@@ -183,8 +183,12 @@ Finally, the present examination was limited in the use of computational time an
 \section{Appendix / supplemental material}
 \label{appendix}
 
+All code, including extensive plots of coefficients found for each model trained can also be found at \url{https://github.com/meraxion/cas}.
+
+One interesting subject of note regarding VINDy (and SINDy) models that was considered for this project but considered out of scope, was the relation between the Library size and the No Free Lunch Theorem \citep{wolpertNoFreeLunch1997}. Namely, if the SINDy library was larger, it would take longer to find the correct governing equations, simply by virtue of needing to eliminate a larger search space. Thus, subject matter expertise would still matter in this new era - or rather, you could trade off subject matter expertise for compute. And it would have been this relationship between computation and library size - with a smaller library standing as proxy for better subject matter knowledge - that would have made an interesting focus for a differejt project. Through discussion with TAs, it was decided that a project adequately investigating this relationship was outside the scope of the current project.
+
 \subsection{Governing Equations for example models}
-\begin{table}
+\begin{table}[h]
   \centering
   \begin{tabular}{lll}
       \hline
@@ -214,7 +218,5 @@ Finally, the present examination was limited in the use of computational time an
   \caption{Comparison of Lorenz system equations across different noise conditions. The true system shows the theoretical form with exact parameters,  subsequent rows show the learned equations under different noise conditions.}
   \label{tab:governing_eqs}
 \end{table}
-
-One interesting subject of note regarding VINDy (and SINDy) models that was considered for this project but considered out of scope, was the relation between the Library size and the No Free Lunch Theorem \citep{wolpertNoFreeLunch1997}. Namely, if the SINDy library was larger, it would take longer to find the correct governing equations, simply by virtue of needing to eliminate a larger search space. Thus, subject matter expertise would still matter in this new era - or rather, you could trade off subject matter expertise for compute. And it would have been this relationship between computation and library size - with a smaller library standing as proxy for better subject matter knowledge - that would have made an interesting focus for a differejt project. Through discussion with TAs, it was decided that a project adequately investigating this relationship was outside the scope of the current project.
 
 \end{document}
