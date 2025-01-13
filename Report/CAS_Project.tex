@@ -12,7 +12,7 @@
 %     \usepackage[preprint]{neurips_2024}
 
 % to compile a camera-ready version, add the [final] option, e.g.:
-\usepackage[final]{neurips_2024}
+\usepackage[final, nonatbib]{neurips_2024}
 
 % to avoid loading the natbib package, add option nonatbib:
 %    \usepackage[nonatbib]{neurips_2024}
@@ -26,7 +26,11 @@
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
+\usepackage[style=apa, natbib=true]{biblatex}
+\usepackage{graphicx}
+\usepackage{subcaption}
 
+\addbibresource{CAS.bib}
 
 % The final project constitutes a report including introduction, methods, results,discussion and when relevant citations. The report should be maximally four pages long (excluding citations) in the template below. The report should be supplemented with code (python file(s) and/or jupyter notebook) which generates the results of your report.
 
@@ -43,21 +47,174 @@
 \maketitle
 
 \begin{abstract}
-  Lorem ipsum, you know the drill.
+  This project examines the performance of the VINDy \citep{contiVENIVINDyVICI2024} approach to discovering equations for physical systems, when put under stress simulating real-world noisy conditions. By distorting the Lorenz attractor process until almost un-recognizable, I afterwards train a VINDy system on this data to try to recover the governing equations. While the models achieve good test loss even in the high-noise training data regime, this does not translate into accurate predictions of a Lorenz system nor recognizable governing equations. Inadequate training time is one particular limitation that could impact how the results of this investigation bear out in the future.
 \end{abstract}
 
 \section{Introduction}
 \label{introduction}
 
+If we could learn the governing laws of any physical system merely by observing it, that could usher in a new age of physical science discovery, allowing us to model objects and systems we had previously been unable to come up with equations for. The work of Steven Brunton and colleagues \citep{bruntonDiscoveringGoverningEquations2016,championDatadrivenDiscoveryCoordinates2019} has developed a method of extracting the governing equations of physical systems called Sparse Identification of Nonlinear Dynamics (SINDy). Recently, this method has been further extended to make use of deep variational autoencoders to improve its functionality, implemented as Variational Identification of Nonlinear Dynamics (VINDy, \citet{contiVENIVINDyVICI2024}), which was also released as a Python package \citep{contiVENIVINDyVICI2024}.
 
-\section*{References}
-\label{references}
+The VINDy approach relies on carefully defining certain additions to the loss function of an autoencoder, and using those additions to constrict the latent space representations of the autoencoder to hold a certain form. Then, that form is further subject to gradient descent towards sparser representation, using a pre-defined library of possible function forms.
 
+The work by \citet{contiVENIVINDyVICI2024} examines the performance of VINDy on retrieving the system dynamics of the Roessler system at different levels of model and measurement noise. The main contributions of their paper is to introduce the model, but they also examine its performance under different levels of noise. However, their report restricts itselves in the amount of measurement noise and model noise they use to examine the model, and does not showcase the limits of the VINDy methodology.
+
+Because chaotic systems are defined by their sensitive dependence on initial conditions, both measurement noise and model noise are important to factor in to our uncertainty. Therefore, in this report, I will examine the performance of the VINDy methodology at increasing levels of measurement noise, and model noise, and see how well it performs. In essence, I am investingating the question of how robust the VINDy methodology is to different levels and sources of noise.
+
+\section{Methods}
+\label{methods}
+
+The code for the project was implemented using the VINDy package by \citet{contiVENIVINDyVICI2024} (itself implemented through tensorflow), and using their example workbook on the Roessler system as a template. Building on this code, I implemented a training pipeline that would train several models with different noise parameters, save the final training and testing loss of each of these models, and then plot these losses against each other.
+
+Measurement noise is implemented by multiplying state information by a normally distributed variable. Measurement noise represents uncertainty in our measurement systems, e.g. the precision of significant digits of a thermometer. Model noise is implemented through representing the model parameters as a Gaussian distribution with a certain variance, and drawing the model parameters from that Gaussian distribution. Model noise represents allowing for perturbations outside of the system in question to also be modelled, or that the system includes inherent randomness. 
+
+In order to adequately test the limits of the approach, measurement noise was injected until it was virtually impossible to induce with the naked eye that the Lorenz attractor was the data-generating process. The end result of this process can be seen in \ref{fig:horrible}, wherein the training data - which was injected with normally distributed noise with 0.5 standard deviation, does not look anything at all like the test data. Figure \ref{fig:optimal} likewise presents noise-free data.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../results/lorenz/vindy/figures/vindy_mdl_noise_0_seed_37_noise_0/_dynamics.png}
+      \caption{Lorenz, optimal conditions: \\0 measurement noise sd}
+      \label{fig:optimal}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../results/lorenz/vindy/figures/vindy_mdl_noise_0.5_seed_37_noise_0.5/_dynamics.png}
+      \caption{Lorenz, poor conditions:\\ 0.5 measurement noise sd}
+      \label{fig:horrible}
+  \end{subfigure}
+  \caption{Comparison of extreme ends of model testing}
+  \label{fig:both}
+\end{figure}
+
+
+The final test parameters for measurement noise were $[0,0.05,0.1,0.2,0.3,0.4,0.5]$, and for model noise $[0,0.1,0.25,0.5]$, and all 28 combinations of these parameters were ran for 2500 epochs of training. Table \ref{tab:vindy_params} describes the default hyperparameters used for each model training run.
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{ll}
+  \hline
+  \textbf{Parameter} & \textbf{Value} \\
+  \hline
+  Model & Lorenz System \\
+  Variables & x\textsubscript{1}, x\textsubscript{2}, x\textsubscript{3} \\
+  Initial Conditions & [0, 0, 25] \\
+  System Parameters & [10, 28, 8/3] \\
+  Training Samples & 30 \\
+  Test Samples & 4 \\
+  Learning Rate & 0.001 \\
+  Beta & 1×10\textsuperscript{-3} \\
+  L\textsubscript{dz} & 1.0 \\
+  Epochs & 1000 \\
+  Batch Size & 256 \\
+  PDF Threshold & 0.5 \\
+  Library & Polynomial (2nd degree, 3 dimensions) \\
+  \hline
+  \end{tabular}
+  \caption{VINDy Model Parameters}
+  \label{tab:vindy_params}
+  \end{table}
+
+\section{Results}
+\label{results}
+
+Figure \ref{fig:overall} shows the result of the testing in terms of the final loss value of each model. I observe that the VINDy approach appears remarkably robust to both model and measurement noise perturbations, achieving high test loss even as training loss increases, indicating its ability to recover the underlying data-generating process.
+
+\begin{figure}
+  \includegraphics[width=1.05\textwidth]{../results/figures/loss_by_noise.png}
+  \caption{Loss across measurement noise, for four levels of model noise}
+  \label{fig:overall}
+\end{figure}
+
+However, this plot does not tell the full story. In order to further investigate the performance of the models, we can do two things. First, we can look at the faithfulness of the final model coefficients (the learned equation parameters), and the accuracy of its integration. I turn now to the former. Model governing equations are provided in table \ref{tab:governing_eqs}, in the Appendix. 
+
+\begin{figure}
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{../results/lorenz/vindy/figures/vindy_mdl_noise_0_seed_37_noise_0/_predictions.png}
+      \caption{Model predictions\\
+      Model Noise = 0,
+      Measurement Noise = 0}
+      \label{fig:pred_optimal}
+  \end{subfigure}%
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../results/lorenz/vindy/figures/vindy_mdl_noise_0.5_seed_37_noise_0/_predictions.png}
+    \caption{Model predictions,\\ Model Noise = 0.5, Measurement Noise = 0}
+    \label{fig:pred_mdl_noise}
+\end{subfigure}%
+\hfill
+\begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{../results/lorenz/vindy/figures/vindy_mdl_noise_0.5_seed_37_noise_0.5/_predictions.png}
+    \caption{Model predictions,\\ Model Noise = 0.5, Measurement Noise = 0.5}
+    \label{fig:pred_horrible}
+\end{subfigure}
+  \caption{Comparison of model predictions of Lorenz coordinates with true Lorenz system and equations.}
+  \label{fig:all_preds}
+\end{figure}
+
+Figure \ref{fig:all_preds} presents a view of integrating the coefficients of several trained models forward in time, starting at some $x_0$, and compares it with the real Lorenz attractor starting at that same $x_0$. 
+
+Presented this way, we can see that given zero noise, the model is much better at accurately predicting the exact trajectory of the Lorenz attractor. 
+
+
+\section{Discussion}
+\label{discussion}
+
+These results showcase some of the pitfalls of modern deep learning systems. Despite achieving high performance on the testing metric, when measured against what we "really" care about - the discovery of governing equations, the prediction of real physical systems - the model does not deliver satisfactory outputs.
+
+An initial interpretation of the data on figure \ref{fig:overall} would say that despite the noise in the training data it seems the restrictions on the system learning (through the VINDy loss parameters) induces it to learn the true data-generating process behind the noise, indicates that the model high-faithfulness one-step predictions.
+
+From figure \ref{fig:all_preds}, we can also note what seems to be the effect of noise on the model; given enough noise, the predictions of the model collapses into the mode of each of the coordinates, as can be seen after $\approx$ 3 time-steps in \ref{fig:pred_horrible} and occurs gradually in \ref{fig:pred_mdl_noise}.
+
+However, as can be seen from \ref{fig:pred_optimal}, even the best predictions deviate from the underlying true data after a while, even if keeping the "form" of the data-generating system. One reason for this is that the loss could be optimizing for sparsity beyond the original equations, thus moving past the "correct" solution, as discussed by \citet{bakarjiDiscoveringGoverningEquations2022}.
+
+Finally, the present examination was limited in the use of computational time and units, which could have impacted the training. \citet{bakarjiDiscoveringGoverningEquations2022} ran some of their systems for 3-4x the number of epochs as I did, but it's a tough task to analyes the impact that could have had on the equations discovered. 
+
+\printbibliography{}
 
 \appendix
 
 \section{Appendix / supplemental material}
 \label{appendix}
 
+\subsection{Governing Equations for example models}
+\begin{table}
+  \centering
+  \begin{tabular}{lll}
+      \hline
+      \textbf{Model} & \textbf{Equations} & \textbf{Parameters} \\
+      \hline
+      True System & 
+      $\dot{x}_1 = \sigma(x_2-x_1)$ & $\sigma = 10$ \\
+      & $\dot{x}_2 = x_1(\rho-x_3)-x_2$ & $\rho = 28$ \\
+      & $\dot{x}_3 = x_1x_2 - \beta x_3$ & $\beta = \frac{8}{3}$ \\
+      \hline
+      Noise-free & 
+      $\dot{x}_1 = 10x_1 - 10x_2$ & \\
+      & $\dot{x}_2 = 27.6x_1 - x_1x_3 - 0.859x_2$ & \\
+      & $\dot{x}_3 = -0.252x_1 - 2.582x_3 + 0.956x_1x_2$ & \\
+      \hline
+      Model Noise = 0.5 & 
+      $\dot{x}_1 = 11.4x_1 + 11.21x_2$ & \\
+      & $\dot{x}_2 = -0.4 - 12.6x_1 + 16.6x_2 + 0.531x_3$ & \\
+      & $\dot{x}_3 = 2.568x_1 - 1.471x_2 - 1.968x_3$ & \\
+      \hline
+      Model \& Measurement Noise = 0.5 & 
+      $\dot{x}_1 = -1.129x_1 + 2.729x_2$ & \\
+      & $\dot{x}_2 = 3.425x_2$ & \\
+      & $\dot{x}_3 = 1.488x_3$ & \\
+      \hline
+  \end{tabular}
+  \caption{Comparison of Lorenz system equations across different noise conditions. The true system shows the theoretical form with exact parameters,  subsequent rows show the learned equations under different noise conditions.}
+  \label{tab:governing_eqs}
+\end{table}
+
+One interesting subject of note regarding VINDy (and SINDy) models that was considered for this project but considered out of scope, was the relation between the Library size and the No Free Lunch Theorem \citep{wolpertNoFreeLunch1997}. Namely, if the SINDy library was larger, it would take longer to find the correct governing equations, simply by virtue of needing to eliminate a larger search space. Thus, subject matter expertise would still matter in this new era - or rather, you could trade off subject matter expertise for compute. And it would have been this relationship between computation and library size - with a smaller library standing as proxy for better subject matter knowledge - that would have made an interesting focus for a differejt project. Through discussion with TAs, it was decided that a project adequately investigating this relationship was outside the scope of the current project.
 
 \end{document}

@@ -68,8 +68,9 @@ def train_vindy_model(
     _, fig_dir, _, weights_dir = gen_dirs(model_name, sindy_type, scenario_info, "results")
 
     # Time vector
-    t0, T, dt = 0, 25, 0.01
-    ts = np.arange(t0, T, dt)
+    t0, T, nt = 0, 24, 2000
+    ts = np.linspace(t0, T, nt)
+    dt = ts[1] - ts[0]
     
     # Generate data
     x0, params = gen_ics(seed, n_train, n_test, dynamics_ic, dynamics_params, mdl_noise)
@@ -173,9 +174,9 @@ def run_hyperparameter_sweep():
     """
     # Define parameter grid
     param_grid = {
-        "epochs" : [1000],
-        "measurement_noise": [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 5],
-        "mdl_noise": [0],
+        "epochs" : [1500],
+        "measurement_noise": [0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5],
+        "mdl_noise": [0, 0.1, 0.25, 0.5],
         "pdf_threshold": [0.5]
     }
     
@@ -185,7 +186,7 @@ def run_hyperparameter_sweep():
     keys, values = zip(*param_grid.items())
     param_combinations = [dict(zip(keys, v)) for v in product(*values)]
     
-    for params in param_combinations:
+    for i, params in enumerate(param_combinations):
         print(f"\nTraining with parameters: {params}")
         try:
             result, scenario = train_vindy_model(**params)
@@ -197,6 +198,10 @@ def run_hyperparameter_sweep():
             })
         except Exception as e:
             print(f"Error with parameters {params}: {str(e)}")
+
+        if i == 0 or i == len(param_combinations)-1:
+            sindy_predict(result["model"], result["sindy_layer"], scenario["x_test"], scenario["ts"], scenario["dim"], scenario["var_names"],
+                    scenario["fig_dir"])
     
     return results, param_grid
 

@@ -70,7 +70,6 @@ def sindy_predict(mdl,
   
   kernel_orig, kernel_scale_orig = sindy_layer.kernel, sindy_layer.kernel_scale
 
-  # integrate basic model
   t_0 = i_test * int(ts.shape[0])
 
   t_preds = []
@@ -97,12 +96,16 @@ def sindy_predict(mdl,
   # restore original coefficients
   sindy_layer.kernel, sindy_layer.kernel_scale = kernel_orig, kernel_scale_orig
   # calculate mean and variance of the trajectories
-  x_uq = np.array(x_preds)
-  x_uq_mean_sampled = np.mean(x_uq, axis=0)
-  x_uq_std = np.std(x_uq, axis=0)
+  try:
+    x_uq = np.array(x_preds)
+    x_uq_mean_sampled = np.mean(x_uq, axis=0)
+    x_uq_std = np.std(x_uq, axis=0)
 
-  plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test,
-                  x_uq_mean_sampled, x_uq_std, fig_dir)
+    plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test,
+                    x_uq_mean_sampled, x_uq_std, fig_dir)
+  except:
+    print("Couldn't predict due to failure to integrate model using sampled coefficients.")
+    return
   return
 
 ### VARIOUS UTILS ### 
@@ -248,7 +251,7 @@ def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_s
           x_uq_mean_sampled[i] + 3 * x_uq_std[i],
           color="grey",
           alpha=0.3,
-          label="UQ bounds ($\pm 3$ std)"
+          label=r"UQ bounds ($\pm 3$ std)"
       )
       axs[i].plot(ts, x_test[t_0: t_0 + nt, i], color="black", label=f"${var_names[i]}$ true")
       axs[i].plot(t_preds[i], x_uq_mean_sampled[i], color="orange", linestyle="--", label=f"${var_names[i]}$ pred mean")
@@ -259,6 +262,7 @@ def plot_vindy_pred(x_test, ts, nt, dim, var_names, t_preds, i_test, x_uq_mean_s
   plt.savefig(os.path.join(fig_dir, "_predictions.png"))
 
   # plt.show()
+  plt.close()
 
   return
 
@@ -281,17 +285,32 @@ def save_train_plots(
 
 def plot_loss_over_noise(results, param_grid, plots_dir="figures"):
 
-  noises = param_grid["measurement_noise"]
-  df = pd.DataFrame.from_dict(results)
-  df = df[["final_loss", "test_loss"]]
+  measure_noises = param_grid["measurement_noise"]
+  mdl_noises     = param_grid["mdl_noise"]
 
-  plt.figure()
-  plt.title("Loss at different levels of measurement noise")
-  plt.xlabel("Measurement Noise")
-  plt.ylabel("Loss")
+  plt.figure(figsize=(10,20))
+  plt.suptitle("Loss at different levels of measurement noise")
 
-  plt.plot(noises, df["final_loss"], label="Final Training Loss")
-  plt.plot(noises, df["test_loss"], label="Test Loss")
+  for idx, mdl_noise in enumerate(mdl_noises):
+    plt.subplot(len(mdl_noises), 1, idx+1)
+    ax = plt.gca()
+
+    # Extract losses for this model noise level
+    final_losses = []
+    test_losses = []
+    for result in results:
+        if result['params']['mdl_noise'] == mdl_noise:
+            final_losses.append(result['final_loss'])
+            test_losses.append(result['test_loss'])
+
+    ax.set_xlabel("Measurement Noise")
+    ax.set_ylabel("Loss")
+    ax.set_title(f"Model Noise: {mdl_noise}")
+
+    ax.plot(measure_noises, final_losses, label="Final Training Loss")
+    ax.plot(measure_noises, test_losses, label="Test Loss")
+
+  # plt.tight_layout()
   save_dir = os.path.join("results", plots_dir)
   plt.savefig(os.path.join(save_dir, "loss_by_noise.png"))
   plt.legend()

@@ -16,6 +16,10 @@ __pycache__/
 
 # bib
 literature/
+*.bbl
+*.bcf
+*.blg
+*.run.xml
 
 # temp
 results/
